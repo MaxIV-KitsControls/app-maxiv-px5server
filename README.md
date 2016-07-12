@@ -7,6 +7,8 @@ A TCP server forwarding requests to an Amptek PX5 device through USB.
 Requirements
 ------------
 
+The server is based on `asyncio` and `pyusb`:
+
 - Python >= 3.4
 - [PyUSB](https://walac.github.io/pyusb/)
 
@@ -16,7 +18,7 @@ Usage
 
 Run the `px5server` as a script or a python module:
 
-```
+```shell
 $ ./px5server.py --help  # Or python3 -m px5server --help
 usage: px5server.py [-h] [--bind BIND] [port]
 
