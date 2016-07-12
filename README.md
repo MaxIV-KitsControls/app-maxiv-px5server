@@ -14,8 +14,10 @@ Requirements
 Usage
 -----
 
+Run the `px5server` as a script or a python module:
+
 ```
-$ python3 -m px5server --help
+$ ./px5server.py --help  # Or python3 -m px5server --help
 usage: px5server.py [-h] [--bind BIND] [port]
 
 Open a TCP server and forward requests to an Amptek PX5 device through USB.
@@ -35,11 +37,11 @@ Performance
 
 Tested with a Raspberry Pi and a 100M connection:
 
-- Read a 1024-channel spectrum: 6ms (against 35 ms for UDP, according to the documentation)
+- Read a 1024-channel spectrum: 6 ms (against 35 ms for UDP, according to the documentation)
 
 
 Contact
 -------
 
-Ludwig Kjellsson: ludvig.kjellsson@maxiv.lu.se
-Vincent Michel: vincent.michel@maxlab.lu.se
+- Ludwig Kjellsson: ludvig.kjellsson@maxiv.lu.se
+- Vincent Michel: vincent.michel@maxlab.lu.se

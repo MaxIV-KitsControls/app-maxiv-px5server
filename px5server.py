@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Open a TCP server and forward requests to an Amptek PX5 device through USB.
 
 This server must run as root in order to access the USB interface.
