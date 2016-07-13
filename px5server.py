@@ -72,14 +72,11 @@ def create_endpoints(vendor, product):
     dev.set_configuration()
     cfg = dev.get_active_configuration()
     intf = cfg[(0, 0)]
-    # Out endpoint
+    # Endpoints
     epin = find_descriptor(intf, custom_match=match_in)
-    if epin is None:
-        raise IOError('Input enpoint not found')
-    # In endpoint
     epout = find_descriptor(intf, custom_match=match_out)
-    if epout is None:
-        raise IOError('Output endpoint not found')
+    if epin is None or epout is None:
+        raise IOError('Endpoints not found')
     return epin, epout
 
 
@@ -159,7 +156,6 @@ def run_server(bind=DEFAULT_BIND, port=DEFAULT_PORT,
     # Close server
     server.close()
     loop.run_until_complete(server.wait_closed())
-    loop.close()
     cache.clear()
     print('The server closed properly')
 
