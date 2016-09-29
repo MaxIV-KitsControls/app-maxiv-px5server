@@ -1,0 +1,11 @@
+[Unit]
+Description=Server to convert usb to ethernet for the amptek px5
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/px5server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
