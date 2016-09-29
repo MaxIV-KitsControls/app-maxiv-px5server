@@ -34,6 +34,22 @@ optional arguments:
                         [default: all interfaces]
 ```
 
+
+Service
+-------
+Run it as a service by adding px5server.service to /etc/systemd/system (debian)
+and then running 
+```
+sudo systemctl enable px5server
+sudo systemctl start px5server
+```
+
+and check the logs by running
+```
+sudo journalctl -u px5server
+```
+
+
 Performance
 -----------
 
