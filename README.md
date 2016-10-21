@@ -18,7 +18,7 @@ Usage
 
 Run the `px5server` as a script or a python module:
 
-```shell
+```console
 $ ./px5server.py --help  # Or python3 -m px5server --help
 usage: px5server.py [-h] [--bind BIND] [port]
 
@@ -35,18 +35,32 @@ optional arguments:
 ```
 
 
-Service
+Package
 -------
-Run it as a service by adding px5server.service to /etc/systemd/system (debian)
-and then running 
-```
-sudo systemctl enable px5server
-sudo systemctl start px5server
+
+A debian package can be built using the `package.sh` script.
+
+This package provides:
+- `/usr/bin/px5server` - the server as an executable
+- `/etc/systemd/system/px5server.service` - the corresponding systemd service
+- `/etc/udev/rules.d/10-usb.rules` - a set of udev rules to manage the service
+
+The server then starts and stops automatically when the equipment is plugged
+in and out. In order to install the package run:
+
+```console
+$ sudo dpkg -i px5server_X.Y.Z-N_all.deb
 ```
 
-and check the logs by running
-```
-sudo journalctl -u px5server
+
+Debugging
+---------
+
+Check the logs by running
+
+```console
+$ sudo systemd px5server status # and
+$ sudo journalctl -a -u px5server
 ```
 
 
