@@ -16,7 +16,9 @@ mkdir -p tmp/etc/udev/rules.d
 cp 10-usb.rules tmp/etc/udev/rules.d/10-usb.rules
 
 # Build package
-fpm -s dir -C tmp -t deb -a all --name px5server --version 0.0.1 --depends python3 --iteration 1 --description "USB<->TCP bridge for amptek px5 ethernet."  .
+fpm -s dir -C tmp -t deb -a all --name px5server \
+    --version 0.1.0 --depends python3 --iteration 1 \
+    --description "USB<->TCP bridge for amptek px5 ethernet."  .
 
 # Note:
 # The server requires python3-usb but there is no deb.
