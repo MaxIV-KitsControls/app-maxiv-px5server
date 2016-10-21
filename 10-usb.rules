@@ -1,0 +1,2 @@
+SUBSYSTEM=="usb", ACTION=="add", ENV{PRODUCT}=="10c4/842a/0", RUN+="/bin/systemctl start px5server"
+SUBSYSTEM=="usb", ACTION=="remove", ENV{PRODUCT}=="10c4/842a/0", RUN+="/bin/systemctl stop px5server"
