@@ -9,6 +9,8 @@ This server must run as root in order to access the USB interface.
 import os
 import asyncio
 import argparse
+import contextlib
+import functools
 import collections
 
 from usb.core import find
@@ -29,41 +31,14 @@ DEFAULT_BIND = ''
 DEFAULT_PORT = 10001
 
 
-# Cache helpers
-
-Cache = collections.namedtuple('Cache', 'get close clear')
-
-
-def make_cache(get, close):
-    cache = {}
-    counter = collections.defaultdict(int)
-
-    def cached_get(*args):
-        if args not in cache:
-            cache[args] = get(*args)
-        counter[args] += 1
-        return cache[args]
-
-    def cached_close(*args):
-        counter[args] -= 1
-        if counter[args] == 0:
-            del cache[args]
-            close(*args)
-
-    def clear():
-        cache.clear()
-        counter.clear()
-
-    return Cache(cached_get, cached_close, clear)
-
-
 # USB helpers
 
 match_in = lambda e: endpoint_direction(e.bEndpointAddress) == ENDPOINT_IN
 match_out = lambda e: endpoint_direction(e.bEndpointAddress) == ENDPOINT_OUT
 
 
-def create_endpoints(vendor, product):
+@contextlib.contextmanager
+def usb_endpoints(vendor, product):
     # Find device
     dev = find(idVendor=vendor, idProduct=product)
     if dev is None:
@@ -77,14 +52,11 @@ def create_endpoints(vendor, product):
     epout = find_descriptor(intf, custom_match=match_out)
     if epin is None or epout is None:
         raise IOError('Endpoints not found')
-    return epin, epout
-
-
-def close_device(vendor, product):
-    # Find device
-    dev = find(idVendor=vendor, idProduct=product)
-    # Dispose resources
-    dispose_resources(dev)
+    # Safe clean
+    try:
+        yield epin, epout
+    finally:
+        dispose_resources(dev)
 
 
 def usb_request(request, epin, epout):
@@ -97,33 +69,27 @@ def usb_request(request, epin, epout):
 # TCP client handler
 
 @asyncio.coroutine
-def handle_client(reader, writer):
+def handle_client(endpoints, reader, writer):
     loop = asyncio.get_event_loop()
-    # Make usb interface
+    # Loop over requests
     try:
-        endpoints = loop.get_endpoints()
-        # Loop over requests
-        try:
-            while not reader.at_eof():
-                # Wait next request
-                try:
-                    header = yield from reader.readexactly(4)
-                except EOFError:
-                    return
-                # Read request
-                msb, lsb = yield from reader.readexactly(2)
-                data = yield from reader.readexactly(msb * 16 + lsb)
-                checksum = yield from reader.readexactly(2)
-                request = header + bytes((msb, lsb)) + data + checksum
-                # Run request
-                with (yield from loop.lock):
-                    reply = yield from loop.run_in_executor(
-                        None, usb_request, request, *endpoints)
-                # Write reply
-                writer.write(reply)
-        # Clean usb interface
-        finally:
-            loop.close_endpoints()
+        while not reader.at_eof():
+            # Wait next request
+            try:
+                header = yield from reader.readexactly(4)
+            except EOFError:
+                return
+            # Read request
+            msb, lsb = yield from reader.readexactly(2)
+            data = yield from reader.readexactly(msb * 256 + lsb)
+            checksum = yield from reader.readexactly(2)
+            request = header + bytes((msb, lsb)) + data + checksum
+            # Run request
+            with (yield from loop.lock):
+                reply = yield from loop.run_in_executor(
+                    None, usb_request, request, *endpoints)
+            # Write reply
+            writer.write(reply)
     # Clean tcp interface
     finally:
         writer.close()
@@ -139,25 +105,24 @@ def run_server(bind=DEFAULT_BIND, port=DEFAULT_PORT,
         return
     # Initialize loop
     loop = asyncio.get_event_loop()
-    cache = make_cache(create_endpoints, close_device)
-    loop.get_endpoints = lambda: cache.get(vendor, product)
-    loop.close_endpoints = lambda: cache.close(vendor, product)
     loop.lock = asyncio.Lock()
-    # Initialize server
-    coro = asyncio.start_server(handle_client, bind, port)
-    server = loop.run_until_complete(coro)
-    msg = 'Serving on {0[0]} port {0[1]} ...'
-    print(msg.format(server.sockets[0].getsockname()))
-    # Run server
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-    # Close server
-    server.close()
-    loop.run_until_complete(server.wait_closed())
-    cache.clear()
-    print('The server closed properly')
+    # Initialize usb endpoints
+    with usb_endpoints(vendor, product) as endpoints:
+        handler = functools.partial(handle_client, endpoints)
+        # Initialize server
+        coro = asyncio.start_server(handler, bind, port)
+        server = loop.run_until_complete(coro)
+        msg = 'Serving on {0[0]} port {0[1]} ...'
+        print(msg.format(server.sockets[0].getsockname()))
+        # Run server
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+        # Close server
+        server.close()
+        loop.run_until_complete(server.wait_closed())
+        print('The server closed properly')
 
 
 # Main execution
