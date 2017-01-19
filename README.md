@@ -41,6 +41,7 @@ Package
 A debian package can be built using the `package.sh` script.
 
 This package provides:
+
 - `/usr/bin/px5server` - the server as an executable
 - `/etc/systemd/system/px5server.service` - the corresponding systemd service
 - `/etc/udev/rules.d/10-usb.rules` - a set of udev rules to manage the service
@@ -70,6 +71,23 @@ Performance
 Tested with a Raspberry Pi and a 100M connection:
 
 - Read a 1024-channel spectrum: 6 ms (against 35 ms for UDP, according to the documentation)
+
+
+Unittest
+--------
+
+The server is unittested with a 100% coverage. Run the tests using
+
+```console
+$ pytest --cov px5server
+```
+
+It requires:
+
+- pytest
+- pytest-mock
+- pytest-asyncio
+- pytest-coverage
 
 
 Contact
