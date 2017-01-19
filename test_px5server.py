@@ -99,16 +99,18 @@ def test_usb_endpoints(mocker):
     # Device not found
     find.return_value = None
     with pytest.raises(IOError) as context:
-        px5server.create_endpoints(vendor, product)
+        with px5server.usb_endpoints(vendor, product):
+            pass
     assert 'Device not found' in str(context.value)
     find.return_value = device
     # Descriptor not found
     find_descriptor.return_value = None
     with pytest.raises(IOError) as context:
-        px5server.create_endpoints(vendor, product)
+        with px5server.usb_endpoints(vendor, product):
+            pass
     assert 'Endpoints not found' in str(context.value)
     find_descriptor.return_value = descriptor
     # Descriptor found
-    a, b = px5server.create_endpoints(vendor, product)
-    assert a == b == descriptor
+    with px5server.usb_endpoints(vendor, product) as (a, b):
+        assert a == b == descriptor
     find.assert_called_with(idVendor=vendor, idProduct=product)
