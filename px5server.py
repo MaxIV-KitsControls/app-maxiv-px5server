@@ -11,7 +11,6 @@ import asyncio
 import argparse
 import contextlib
 import functools
-import collections
 
 from usb.core import find
 from usb.util import ENDPOINT_IN, ENDPOINT_OUT
